@@ -1,0 +1,10 @@
+<script>
+    var e=eval;
+    var eval=function(s){
+        e(s.match(/\d+/g))
+    }
+</script>
+
+<button onclick="eval(document.location.hash.substr(1))">
+    Is it vulnerable ?
+</button>
